@@ -1,80 +1,116 @@
+/* ==========================================================================
+   ERP Tender & BOQ Cost Sheet — Enterprise Design System
+   Modern, Clean, High-Precision Financial Spreadsheet UI
+   ========================================================================== */
+
 :root {
-  --bg: #EEF1F5;
-  --panel: #fff;
-  --line: #D9DFE7;
-  --text: #1B2433;
-  --muted: #6B778A;
-  --navy: #14213D;
-  --navy2: #1E3059;
-  --nt: #F2F5FA;
-  --cat: #E3EAF5;
-  --item: #fff;
-  --lrow: #F8FAFC;
-  --acc: #F2A100;
-  --best: #DDF3E4;
-  --bt: #12703A;
-  --over: #FCE4E2;
-  --ot: #B3261E;
-  --cm: #DCE8FB;
-  --cmt: #1E4FA8;
-  --cl: #FDEBD3;
-  --clt: #9A5A00;
-  --hov: #EEF4FD;
+  /* Color Palette — Enterprise Slate & Indigo */
+  --bg: #F8FAFC;
+  --panel: #FFFFFF;
+  --line: #E2E8F0;
+  --line-strong: #CBD5E1;
+  --text: #0F172A;
+  --muted: #64748B;
+  --subtle: #94A3B8;
+
+  /* Header Dark Gradients */
+  --navy: #0F172A;
+  --navy2: #1E293B;
+  --navy3: #334155;
+  --nt: #F8FAFC;
+  --nt-muted: #94A3B8;
+
+  /* Rows */
+  --cat: #F1F5F9;
+  --cat-text: #0F172A;
+  --cat-accent: #2563EB;
+  --item: #FFFFFF;
+  --lrow: #FBFDFE;
+  --hov: #F1F5F9;
+
+  /* Brand & Actions */
+  --acc: #2563EB;
+  --acc-hover: #1D4ED8;
+  --acc-soft: rgba(37, 99, 235, 0.08);
+
+  /* Performance & Highlights */
+  --best: #ECFDF5;
+  --best-border: #A7F3D0;
+  --bt: #059669;
+  --bt-dark: #047857;
+
+  --over: #FEF2F2;
+  --over-border: #FECACA;
+  --ot: #DC2626;
+  --ot-dark: #B91C1C;
+
+  /* Tag Micro-Pills */
+  --cm: #EFF6FF;
+  --cmt: #1D4ED8;
+  --cm-border: #BFDBFE;
+
+  --cl: #FFFBEB;
+  --clt: #B45309;
+  --cl-border: #FDE68A;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E1420;
-    --panel: #151D2C;
-    --line: #273248;
-    --text: #E4EAF4;
-    --muted: #93A0B6;
-    --navy: #0A1020;
-    --navy2: #121C36;
-    --nt: #E4EAF4;
-    --cat: #1C2A44;
-    --item: #151D2C;
-    --lrow: #111A28;
-    --acc: #F5B335;
-    --best: #12301F;
-    --bt: #6EDC9A;
-    --over: #3A1A1A;
-    --ot: #FF9C94;
-    --cm: #1B2F55;
-    --cmt: #9EC1FF;
-    --cl: #3A2A10;
-    --clt: #FFC66B;
-    --hov: #1A2640;
-    color-scheme: dark;
-  }
-}
-
 :root[data-theme="dark"] {
-  --bg: #0E1420;
-  --panel: #151D2C;
-  --line: #273248;
-  --text: #E4EAF4;
-  --muted: #93A0B6;
-  --navy: #0A1020;
-  --navy2: #121C36;
-  --nt: #E4EAF4;
-  --cat: #1C2A44;
-  --item: #151D2C;
-  --lrow: #111A28;
-  --acc: #F5B335;
-  --best: #12301F;
-  --bt: #6EDC9A;
-  --over: #3A1A1A;
-  --ot: #FF9C94;
-  --cm: #1B2F55;
-  --cmt: #9EC1FF;
-  --cl: #3A2A10;
-  --clt: #FFC66B;
-  --hov: #1A2640;
+  --bg: #0B0F17;
+  --panel: #111827;
+  --line: #1F2937;
+  --line-strong: #374151;
+  --text: #F3F4F6;
+  --muted: #9CA3AF;
+  --subtle: #6B7280;
+
+  --navy: #030712;
+  --navy2: #0B0F17;
+  --navy3: #1F2937;
+  --nt: #F9FAFB;
+  --nt-muted: #9CA3AF;
+
+  --cat: #161F30;
+  --cat-text: #F9FAFB;
+  --cat-accent: #3B82F6;
+  --item: #111827;
+  --lrow: #0E1523;
+  --hov: #1E293B;
+
+  --acc: #3B82F6;
+  --acc-hover: #2563EB;
+  --acc-soft: rgba(59, 130, 246, 0.15);
+
+  --best: #064E3B;
+  --best-border: #047857;
+  --bt: #34D399;
+  --bt-dark: #6EE7B7;
+
+  --over: #450A0A;
+  --over-border: #7F1D1D;
+  --ot: #F87171;
+  --ot-dark: #FCA5A5;
+
+  --cm: #1E293B;
+  --cmt: #60A5FA;
+  --cm-border: #2563EB;
+
+  --cl: #2D2010;
+  --clt: #FBBF24;
+  --cl-border: #B45309;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+
   color-scheme: dark;
 }
 
+/* Base Styles & Typography */
 * {
   box-sizing: border-box;
 }
@@ -87,8 +123,10 @@ html, body, #root {
 body {
   background: var(--bg);
   color: var(--text);
-  font: 12.5px/1.2 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  font: 12.5px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -98,103 +136,205 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ==========================================================================
+   Top Header & Navigation Bar
+   ========================================================================== */
+
 .top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  padding: 8px 14px;
-  background: var(--navy);
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
   color: var(--nt);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  flex: none;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .top h1 {
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  color: #FFFFFF;
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1.5px 6px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34D399;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
 }
 
 .top .sub {
-  opacity: 0.7;
-  font-size: 11.5px;
-  margin-top: 2px;
+  color: var(--nt-muted);
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.top .sub b {
+  color: #E2E8F0;
 }
 
 .sp {
   flex: 1;
 }
 
+/* Header Buttons */
 .btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.07);
+  color: #F1F5F9;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
-  padding: 5px 11px;
+  padding: 5px 12px;
   font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-0.5px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0.5px);
 }
 
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
-.btn.on {
-  background: var(--acc);
-  color: #1B1400;
-  border-color: var(--acc);
-}
-
+/* Level Segmented Control */
 .seg {
-  display: flex;
+  display: inline-flex;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .seg .btn {
-  border-radius: 0;
-  margin-left: -1px;
-}
-
-.seg .btn:first-child {
-  border-radius: 6px 0 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--nt-muted);
+  border-radius: 4px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
   margin: 0;
 }
 
-.seg .btn:last-child {
-  border-radius: 0 6px 6px 0;
+.seg .btn:hover:not(:disabled):not(.on) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
+
+.seg .btn.on {
+  background: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+}
+
+/* ==========================================================================
+   KPI Summary Metric Cards
+   ========================================================================== */
 
 .sum {
   display: flex;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 10px;
+  padding: 8px 16px;
   overflow-x: auto;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
   flex: none;
+  box-shadow: var(--shadow-sm);
 }
 
 .kpi {
   flex: 0 0 auto;
-  min-width: 128px;
+  min-width: 135px;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 5px 10px;
+  padding: 6px 12px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.kpi:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .kpi small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 9.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
 }
 
 .kpi b {
   font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
+  color: var(--text);
+  display: block;
 }
 
 .kpi em {
@@ -203,16 +343,26 @@ body {
   font-size: 10.5px;
   color: var(--bt);
   font-weight: 600;
+  margin-top: 1px;
 }
 
+/* Highlighted Lowest Quote Card */
 .kpi.g {
-  border-color: var(--bt);
+  border-color: var(--best-border);
   background: var(--best);
 }
 
 .kpi.g b {
-  color: var(--bt);
+  color: var(--bt-dark);
 }
+
+.kpi.g em {
+  color: var(--bt-dark);
+}
+
+/* ==========================================================================
+   Spreadsheet Virtual Grid Container
+   ========================================================================== */
 
 #sc {
   flex: 1;
@@ -228,10 +378,12 @@ body {
   position: relative;
 }
 
+/* Sticky Header Groupings */
 .hd {
   position: sticky;
   top: 0;
   z-index: 6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .hr {
@@ -241,26 +393,50 @@ body {
   color: var(--nt);
   height: 24px;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .hr.c {
   height: 30px;
   font-size: 11.5px;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
   background: var(--navy2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .hr > div {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
   white-space: nowrap;
   background: inherit;
+}
+
+/* Header Group Tinting */
+.hr .grp-budget {
+  background: #1E293B;
+  color: #CBD5E1;
+}
+
+.hr .grp-vendors {
+  background: #172554;
+  color: #BFDBFE;
+}
+
+.hr .grp-best {
+  background: #064E3B;
+  color: #A7F3D0;
+}
+
+.hr .grp-diff {
+  background: #1E293B;
+  color: #E2E8F0;
 }
 
 .hr .n {
@@ -271,28 +447,35 @@ body {
   justify-content: center;
 }
 
+/* Pinned (Sticky Frozen) Columns */
 .stl {
   position: sticky;
   left: 0;
   z-index: 3;
-  border-right: 2px solid var(--line) !important;
+  border-right: 2px solid var(--line-strong) !important;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.04);
 }
 
 .str {
   position: sticky;
   right: 0;
   z-index: 3;
-  border-left: 2px solid var(--line);
+  border-left: 2px solid var(--line-strong) !important;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.04);
 }
 
 .hr .stl,
 .hr .str {
-  border-color: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 #bd {
   position: relative;
 }
+
+/* ==========================================================================
+   Spreadsheet Rows (L1 Category, L2 Sub-item, L3 Material/Labor)
+   ========================================================================== */
 
 .r {
   position: absolute;
@@ -304,19 +487,28 @@ body {
   grid-template-columns: var(--cols);
   background: var(--rb);
   border-bottom: 1px solid var(--line);
+  transition: background 0.08s ease;
 }
 
+/* Level 1: Category Row */
 .r.cat {
   --rb: var(--cat);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--cat-text);
+  border-left: 3.5px solid var(--cat-accent);
 }
 
+/* Level 2: Sub-item Row */
 .r.item {
   --rb: var(--item);
+  font-weight: 500;
 }
 
+/* Level 3: Line Row (Material & Labor) */
 .r.line {
   --rb: var(--lrow);
+  color: var(--text);
+  font-weight: 400;
 }
 
 .r.cat:hover,
@@ -343,17 +535,22 @@ body {
 .n {
   justify-content: flex-end;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .ed {
   cursor: cell;
 }
 
+/* Active Cell Outline */
 .act {
-  outline: 2px solid var(--acc);
+  outline: 2px solid #2563EB !important;
   outline-offset: -2px;
+  background: rgba(37, 99, 235, 0.05) !important;
+  z-index: 2;
 }
 
+/* Lowest Rate Highlighting & Badge */
 .val-wrap {
   display: inline-flex;
   align-items: center;
@@ -369,33 +566,36 @@ body {
   font-size: 8px;
   font-weight: 800;
   line-height: 1;
-  padding: 1.5px 3.5px;
+  padding: 1.5px 4px;
   border-radius: 3px;
   background: var(--bt);
-  color: var(--panel);
-  letter-spacing: 0.04em;
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
   flex: none;
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25);
 }
 
 .r > div.bst {
-  background: var(--best);
-  color: var(--bt);
+  background: var(--best) !important;
+  color: var(--bt-dark) !important;
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px var(--bt);
+  box-shadow: inset 0 0 0 1px var(--best-border);
 }
 
+/* Cost Difference (Over Budget vs Savings) */
 .r .str.up {
-  background: var(--over);
-  color: var(--ot);
+  background: var(--over) !important;
+  color: var(--ot-dark) !important;
   font-weight: 600;
 }
 
 .r .str.dn {
-  background: var(--best);
-  color: var(--bt);
+  background: var(--best) !important;
+  color: var(--bt-dark) !important;
   font-weight: 600;
 }
 
+/* Hierarchy Tree Indentation & Elements */
 .dd {
   display: flex;
   align-items: center;
@@ -413,15 +613,24 @@ body {
   margin-right: 7px;
   flex: none;
   font-variant-numeric: tabular-nums;
-  font-weight: 400;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 11px;
 }
 
 .cnt {
   margin-left: 8px;
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 11px;
+  color: #475569;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 10px;
   flex: none;
+}
+
+:root[data-theme="dark"] .cnt {
+  color: #94A3B8;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .mut {
@@ -429,6 +638,7 @@ body {
   font-size: 11px;
 }
 
+/* Smooth Expand/Collapse Chevron */
 .chev {
   width: 16px;
   height: 16px;
@@ -437,21 +647,31 @@ body {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 9px;
+  font-size: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   margin-right: 4px;
-  transition: transform 0.12s;
+  transition: transform 0.15s ease, color 0.1s ease;
+  border-radius: 3px;
+}
+
+.chev:hover {
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .chev.o {
   transform: rotate(90deg);
 }
 
+/* Material & Labor Pills */
 .tag {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 4px;
+  padding: 1.5px 5px;
+  border-radius: 3px;
   margin-right: 7px;
   flex: none;
   letter-spacing: 0.04em;
@@ -460,42 +680,48 @@ body {
 .tag.m {
   background: var(--cm);
   color: var(--cmt);
+  border: 1px solid var(--cm-border);
 }
 
 .tag.l {
   background: var(--cl);
   color: var(--clt);
+  border: 1px solid var(--cl-border);
 }
 
+/* Best Vendor Letter Badge */
 .vb {
   font-weight: 700;
-  font-size: 11px;
+  font-size: 10.5px;
   width: 20px;
   height: 18px;
   border-radius: 4px;
   background: var(--best);
-  color: var(--bt);
+  color: var(--bt-dark);
+  border: 1px solid var(--best-border);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Infinite Scroll Loading Row */
 .r.load {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
   color: var(--muted);
+  font-size: 12px;
   --rb: var(--panel);
 }
 
 .spin {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   border: 2px solid var(--line);
-  border-top-color: var(--acc);
+  border-top-color: #2563EB;
   border-radius: 50%;
-  animation: sp 0.7s linear infinite;
+  animation: sp 0.6s linear infinite;
 }
 
 @keyframes sp {
@@ -513,31 +739,44 @@ body {
   }
 }
 
+/* In-Cell Floating Input Editor */
 .ei {
   position: absolute;
-  z-index: 5;
+  z-index: 10;
   height: 28px;
-  border: 2px solid var(--acc);
+  border: 2px solid #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
   background: var(--panel);
   color: var(--text);
   font: inherit;
+  font-weight: 600;
   text-align: right;
-  padding: 0 8px;
+  padding: 0 7px;
   outline: none;
   font-variant-numeric: tabular-nums;
+  border-radius: 2px;
 }
+
+/* ==========================================================================
+   Bottom Status Bar & Shortcuts
+   ========================================================================== */
 
 .st {
   display: flex;
-  gap: 6px 16px;
+  gap: 8px 16px;
   flex-wrap: wrap;
   align-items: center;
-  padding: 5px 14px;
+  padding: 6px 16px;
   background: var(--panel);
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 11.5px;
   flex: none;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.st b {
+  color: var(--text);
 }
 
 kbd {
@@ -545,8 +784,10 @@ kbd {
   border: 1px solid var(--line);
   border-bottom-width: 2px;
   border-radius: 4px;
-  padding: 0 4px;
+  padding: 1px 5px;
   font: inherit;
-  font-size: 10.5px;
+  font-size: 10px;
+  font-family: inherit;
   color: var(--text);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }

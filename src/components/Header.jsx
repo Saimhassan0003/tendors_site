@@ -5,10 +5,10 @@ export function Header() {
   const groups = [
     [1, '', 'stl'],
     [1, '', ''],
-    [3, 'Budget', 'ctr'],
-    [3, 'Vendor Quotes (Price Comparison)', 'ctr'],
-    [2, 'Best Quote', 'ctr'],
-    [1, 'Cost Difference', 'str ctr']
+    [3, 'Budget', 'ctr grp-budget'],
+    [3, 'Vendor Quotes (Price Comparison)', 'ctr grp-vendors'],
+    [2, 'Best Quote', 'ctr grp-best'],
+    [1, 'Cost Difference', 'str ctr grp-diff']
   ];
 
   return (
