@@ -294,15 +294,13 @@ export function Grid(p) {
         </div>
       </div>
       <div className="st">
-        <span>
-          Loaded <b>{Math.min(tree.loaded, NT).toLocaleString('en-US')}</b> of{' '}
-          {NT.toLocaleString('en-US')} sub-items · {rows.length.toLocaleString('en-US')} rows in view
+        <span className="st-cnt">
+          {Math.min(tree.loaded, NT).toLocaleString('en-US')} of {NT.toLocaleString('en-US')} items loaded
         </span>
-        <span>{label}</span>
+        <span className="st-path">{label}</span>
         <span className="sp" />
-        <span>
-          <kbd>Single Click</kbd> edit cell · <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> move ·{' '}
-          <kbd>Enter</kbd> / <kbd>Tab</kbd> save & next · <kbd>Esc</kbd> cancel · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd> undo/redo
+        <span className="st-hints">
+          <kbd>↑↓←→</kbd> move · <kbd>Enter</kbd> edit · <kbd>Esc</kbd> cancel · <kbd>Ctrl+Z/Y</kbd>
         </span>
       </div>
     </>

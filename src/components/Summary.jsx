@@ -17,24 +17,25 @@ export function Summary(p) {
 
   return (
     <div className="sum">
-      {kpi('b', 'Budget Total', T.a)}
+      {kpi('b', 'Budget total', T.a)}
       {VENDORS.map((n, i) =>
         kpi(
           'v' + i,
           n,
           T.va[i],
           T.va[i] === mn,
-          T.va[i] === mn ? '★ Lowest Single Quote' : pct(T.va[i], T.a) + ' vs budget'
+          T.va[i] === mn ? 'Lowest single quote' : pct(T.va[i], T.a) + ' vs budget'
         )
       )}
-      {kpi('x', 'Best of Quotes', T.ba, true, 'Cheapest line-by-line')}
+      {kpi('x', 'Best of quotes', T.ba, true, 'Cheapest rate per line')}
       {kpi(
         's',
-        sv >= 0 ? 'Potential Saving' : 'Over Budget',
+        sv >= 0 ? 'Potential saving' : 'Over budget',
         Math.abs(sv),
         sv >= 0,
-        (sv / T.a * 100).toFixed(1) + '% vs budget'
+        (sv / T.a * 100).toFixed(1) + '% of budget'
       )}
     </div>
   );
 }
+

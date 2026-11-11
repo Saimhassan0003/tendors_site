@@ -41,11 +41,11 @@ function RowComponent(props) {
   const label = (
     <span
       className="dd"
-      style={{ paddingLeft: isCat ? 4 : isItem ? 22 : 44 }}
+      style={{ paddingLeft: isCat ? 8 : isItem ? 24 : 40 }}
     >
       {isLine ? (
         <>
-          <span className={'tag ' + (o.t === 'M' ? 'm' : 'l')}>
+          <span className={'chip ' + (o.t === 'M' ? 'm' : 'l')}>
             {o.t === 'M' ? 'MAT' : 'LAB'}
           </span>
           <span className="t" title={o.n}>{o.n}</span>
@@ -77,7 +77,7 @@ function RowComponent(props) {
 
   const cells = [
     cell('d', 'stl', label),
-    cell('u', 'ctr', isCat ? '' : o.u),
+    cell('u', 'ctr mut', isCat ? '' : o.u),
     cell('q', 'n' + (canEdit ? ' ed' : ''), canEdit ? nq(o.q) : ''),
     cell('r', 'n' + (canEdit ? ' ed' : ''), canEdit ? n2(o.r) : ''),
     cell('a', 'n', n0(o.a))
@@ -90,14 +90,7 @@ function RowComponent(props) {
       cell(
         'v' + k,
         'n' + (canEdit ? ' ed' : '') + (isLowest ? ' bst' : ''),
-        isLowest ? (
-          <span className="val-wrap">
-            <span className="bst-tag">LOW</span>
-            <span>{isLine ? n2(val) : n0(val)}</span>
-          </span>
-        ) : (
-          <span>{isLine ? n2(val) : n0(val)}</span>
-        ),
+        <span>{isLine ? n2(val) : n0(val)}</span>,
         pct(val, isLine ? o.r : o.a) + ' vs budget'
       )
     );
@@ -118,8 +111,14 @@ function RowComponent(props) {
     cell('ba', 'n', n0(o.ba)),
     cell(
       'df',
-      'str n ' + (d > 50 ? 'up' : d < -50 ? 'dn' : ''),
-      d > 50 ? '▲ Rs ' + n0(d) : d < -50 ? '▼ Rs ' + n0(-d) : '–',
+      'str n',
+      d > 50 ? (
+        <span className="diff-pill up">▲ {n0(d)}</span>
+      ) : d < -50 ? (
+        <span className="diff-pill dn">▼ {n0(-d)}</span>
+      ) : (
+        <span className="diff-zero">–</span>
+      ),
       pct(o.ba, o.a) + ' of budget' + (d < -50 ? ' (Saving)' : d > 50 ? ' (Over budget)' : '')
     )
   );
