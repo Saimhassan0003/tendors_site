@@ -1,41 +1,66 @@
 import React from 'react';
-import { VENDORS } from '../utils/constants';
-import { n0, compact, pct } from '../utils/money';
+import { VENDORS } from '../utils/constants.js';
+import { formatRupees, formatCompactCurrency, formatPercentDiff } from '../utils/money.js';
 
-export function Summary(p) {
-  const T = p.totals;
-  const mn = Math.min(...T.va);
-  const sv = T.a - T.ba;
+/**
+ * KPI Summary Strip
+ * -----------------
+ * Renders 6 flat enterprise metric cards calculating:
+ * Budget Total, Vendor Quote Totals, Best of Quotes, and Potential Savings.
+ */
+export function Summary({ totals }) {
+  const budgetAmount = totals.amount ?? totals.a ?? 0;
+  const bestQuotesAmount = totals.bestAmount ?? totals.ba ?? 0;
+  const vendorAmounts = totals.vendorAmounts ?? totals.va ?? [0, 0, 0];
+  
+  // Find the lowest vendor quote total among the 3 vendors
+  const lowestVendorTotal = Math.min(...vendorAmounts);
+  const totalSavings = budgetAmount - bestQuotesAmount;
 
-  const kpi = (key, label, v, good, note) => (
-    <div key={key} className={'kpi' + (good ? ' g' : '')} title={'Rs ' + n0(v)}>
-      <small>{label}</small>
-      <b>{compact(v)}</b>
-      {note ? <em>{note}</em> : null}
-    </div>
-  );
+  function renderCard(cardKey, label, amountValue, isHighlighted, subtitle) {
+    return (
+      <div
+        key={cardKey}
+        className={'kpi' + (isHighlighted ? ' g' : '')}
+        title={`Rs ${formatRupees(amountValue)}`}
+      >
+        <small>{label}</small>
+        <b>{formatCompactCurrency(amountValue)}</b>
+        {subtitle ? <em>{subtitle}</em> : null}
+      </div>
+    );
+  }
+
+  const isUnderBudget = totalSavings >= 0;
+  const savingsPercent = budgetAmount ? (Math.abs(totalSavings) / budgetAmount * 100).toFixed(1) : '0.0';
 
   return (
-    <div className="sum">
-      {kpi('b', 'Budget total', T.a)}
-      {VENDORS.map((n, i) =>
-        kpi(
-          'v' + i,
-          n,
-          T.va[i],
-          T.va[i] === mn,
-          T.va[i] === mn ? 'Lowest single quote' : pct(T.va[i], T.a) + ' vs budget'
-        )
+    <section className="sum" aria-label="Cost sheet KPI summary">
+      {/* 1. Overall Budget Total */}
+      {renderCard('budget', 'Budget total', budgetAmount)}
+
+      {/* 2, 3, 4. Vendor A, B, C Totals */}
+      {VENDORS.map((vendorName, vendorIndex) => {
+        const vendorTotal = vendorAmounts[vendorIndex];
+        const isCheapestVendor = vendorTotal === lowestVendorTotal;
+        const note = isCheapestVendor 
+          ? 'Lowest single quote' 
+          : `${formatPercentDiff(vendorTotal, budgetAmount)} vs budget`;
+
+        return renderCard(`vendor-${vendorIndex}`, vendorName, vendorTotal, isCheapestVendor, note);
+      })}
+
+      {/* 5. Best of Quotes (combining lowest quote per row) */}
+      {renderCard('best-quotes', 'Best of quotes', bestQuotesAmount, true, 'Cheapest rate per line')}
+
+      {/* 6. Potential Savings vs Over Budget */}
+      {renderCard(
+        'savings',
+        isUnderBudget ? 'Potential saving' : 'Over budget',
+        Math.abs(totalSavings),
+        isUnderBudget,
+        `${savingsPercent}% of budget`
       )}
-      {kpi('x', 'Best of quotes', T.ba, true, 'Cheapest rate per line')}
-      {kpi(
-        's',
-        sv >= 0 ? 'Potential saving' : 'Over budget',
-        Math.abs(sv),
-        sv >= 0,
-        (sv / T.a * 100).toFixed(1) + '% of budget'
-      )}
-    </div>
+    </section>
   );
 }
-

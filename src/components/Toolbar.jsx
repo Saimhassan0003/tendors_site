@@ -1,58 +1,76 @@
 import React from 'react';
 
-export function Toolbar(p) {
+/**
+ * Top Application Header & Toolbar
+ * --------------------------------
+ * Displays tender project metadata, Undo/Redo buttons,
+ * L1/L2/L3 hierarchy level toggles, and light/dark theme switch.
+ */
+export function Toolbar({ sheet, level, onUndo, onRedo, onLevel, onTheme }) {
+  const levelDescriptions = [
+    'Categories only (Level 1)',
+    'Categories and sub-items (Level 2)',
+    'Everything including material and labor (Level 3)'
+  ];
+
   return (
-    <div className="top">
+    <header className="top">
       <div>
         <h1>Tender Cost Sheet</h1>
         <div className="sub">
           TN-2026-014 · Commercial Complex, Phase 2 · Currency: PKR
         </div>
       </div>
+
       <div className="sp" />
+
+      {/* Undo Button */}
       <button
+        type="button"
         className="btn"
-        disabled={!p.sheet.canUndo}
-        onClick={p.onUndo}
-        title="Undo change"
+        disabled={!sheet.canUndo}
+        onClick={onUndo}
+        title="Undo previous change (Ctrl+Z)"
       >
         ↶ Undo
       </button>
+
+      {/* Redo Button */}
       <button
+        type="button"
         className="btn"
-        disabled={!p.sheet.canRedo}
-        onClick={p.onRedo}
-        title="Redo change"
+        disabled={!sheet.canRedo}
+        onClick={onRedo}
+        title="Redo previous change (Ctrl+Y)"
       >
         ↷ Redo
       </button>
-      <div className="seg" role="group" aria-label="Expand level">
-        {[1, 2, 3].map((n) => (
+
+      {/* Segmented L1 | L2 | L3 Expand Levels */}
+      <div className="seg" role="group" aria-label="Tree expansion levels">
+        {[1, 2, 3].map((lvlNumber) => (
           <button
-            key={n}
-            className={'btn' + (p.level === n ? ' on' : '')}
-            title={
-              [
-                'Categories only',
-                'Categories and sub-items',
-                'Everything incl. material and labour'
-              ][n - 1]
-            }
-            onClick={() => p.onLevel(n)}
+            key={lvlNumber}
+            type="button"
+            className={'btn' + (level === lvlNumber ? ' on' : '')}
+            title={levelDescriptions[lvlNumber - 1]}
+            onClick={() => onLevel(lvlNumber)}
           >
-            {'L' + n}
+            {`L${lvlNumber}`}
           </button>
         ))}
       </div>
+
+      {/* Theme Toggle Button */}
       <button
+        type="button"
         className="btn"
-        aria-label="Toggle light or dark theme"
-        onClick={p.onTheme}
+        aria-label="Toggle dark or light theme"
+        onClick={onTheme}
         title="Toggle dark/light theme"
       >
         ◐
       </button>
-    </div>
+    </header>
   );
 }
-

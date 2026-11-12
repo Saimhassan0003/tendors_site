@@ -1,308 +1,386 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { RH, HH, OVERSCAN, COLS, CI, GRID_VARS } from '../utils/constants.js';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { ROW_HEIGHT, HEADER_HEIGHT, VIRTUAL_OVERSCAN, COLS, CI, GRID_VARS } from '../utils/constants.js';
 import { parseDecimal } from '../utils/money.js';
 import { NT } from '../data/generateData.js';
 import { Header } from './Header.jsx';
 import { Row } from './Row.jsx';
 import { CellEditor } from './CellEditor.jsx';
 
-const isEditable = (row, c) => !!row && (row.t === 'l' || row.t === 'i') && !!COLS[CI[c]]?.e;
+// Checks if a cell is editable (only lines and sub-items on columns marked editable)
+function isCellEditable(row, columnKey) {
+  if (!row) return false;
+  const isLineOrSubItem = row.type === 'line' || row.type === 'item' || row.t === 'l' || row.t === 'i';
+  const columnIndex = CI[columnKey];
+  return isLineOrSubItem && Boolean(COLS[columnIndex]?.isEditable || COLS[columnIndex]?.e);
+}
 
-export function Grid(p) {
-  const { sheet, tree } = p;
-  const rows = tree.rows;
-  const scRef = useRef(null);
-  const pending = useRef(null);
-  const raf = useRef(0);
+/**
+ * High-Performance Virtualized Grid Component
+ * --------------------------------------------
+ * Handles 60 FPS scrolling across 5,000+ items, keyboard cell navigation,
+ * and inline cell editing with full undo/redo support.
+ */
+export function Grid({ sheet, tree }) {
+  const allRows = tree.rows;
+  const scrollContainerRef = useRef(null);
+  const pendingFocusRef = useRef(null);
 
-  const [top, setTop] = useState(0);
-  const [vh, setVh] = useState(600);
-  const [act, setAct] = useState(null);
-  const [edit, setEdit] = useState(null);
+  // Viewport and scroll positions
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(600);
 
-  const index = useMemo(() => {
-    const m = new Map();
-    rows.forEach((r, i) => {
-      m.set(r.k, i);
+  // Active cell and inline editor state
+  const [activeCell, setActiveCell] = useState(null);
+  const [editingCell, setEditingCell] = useState(null);
+
+  // Quick lookup map: rowKey -> rowIndex
+  const rowIndexMap = useMemo(() => {
+    const map = new Map();
+    allRows.forEach((row, index) => {
+      map.set(row.key || row.k, index);
     });
-    return m;
-  }, [rows]);
+    return map;
+  }, [allRows]);
 
-  const real = rows.length - (rows.length && rows[rows.length - 1].t === 's' ? 1 : 0);
+  // Total count of real data rows (excluding bottom sentinel loader)
+  const actualRowCount = allRows.length - (allRows.length && (allRows[allRows.length - 1].type === 'sentinel' || allRows[allRows.length - 1].t === 's') ? 1 : 0);
 
+  // Measure scroll container height on resize
   useEffect(() => {
-    const el = scRef.current;
-    if (!el) return;
-    const f = () => {
-      setVh(el.clientHeight - HH);
+    const containerElement = scrollContainerRef.current;
+    if (!containerElement) return;
+
+    const updateHeight = () => {
+      setViewportHeight(containerElement.clientHeight - HEADER_HEIGHT);
     };
-    f();
-    const ro = new ResizeObserver(f);
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      if (raf.current) cancelAnimationFrame(raf.current);
-    };
+
+    updateHeight();
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(containerElement);
+
+    return () => resizeObserver.disconnect();
   }, []);
 
-  // Infinite scroll trigger
+  // Infinite scroll trigger: loads next batch before reaching the bottom
   useEffect(() => {
-    if (top + vh > rows.length * RH - 3500) {
+    const bottomThreshold = allRows.length * ROW_HEIGHT - 3500;
+    if (scrollTop + viewportHeight > bottomThreshold) {
       tree.loadMore();
     }
-  }, [top, vh, rows.length, tree.loadMore]);
+  }, [scrollTop, viewportHeight, allRows.length, tree]);
 
-  const reveal = (ri, c) => {
-    const el = scRef.current;
-    if (!el) return;
-    const y = ri * RH;
-    const st = el.scrollTop;
-    const view = el.clientHeight - HH;
-    if (y < st) el.scrollTop = y;
-    else if (y + RH > st + view) el.scrollTop = y + RH - view;
+  /** Scrolls the container if selected cell is outside current view */
+  const revealCell = useCallback((rowIndex, columnKey) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-    const col = COLS[CI[c]];
-    if (c !== 'd' && c !== 'df') {
-      const fl = COLS[0].w;
-      const fr = COLS[COLS.length - 1].w;
-      if (col.x < el.scrollLeft + fl) {
-        el.scrollLeft = col.x - fl;
-      } else if (col.x + col.w > el.scrollLeft + el.clientWidth - fr) {
-        el.scrollLeft = col.x + col.w - el.clientWidth + fr;
+    const rowTop = rowIndex * ROW_HEIGHT;
+    const currentScroll = container.scrollTop;
+    const viewHeight = container.clientHeight - HEADER_HEIGHT;
+
+    // Vertical auto-scroll
+    if (rowTop < currentScroll) {
+      container.scrollTop = rowTop;
+    } else if (rowTop + ROW_HEIGHT > currentScroll + viewHeight) {
+      container.scrollTop = rowTop + ROW_HEIGHT - viewHeight;
+    }
+
+    // Horizontal auto-scroll (keeping sticky columns visible)
+    const targetColumn = COLS[CI[columnKey]];
+    if (columnKey !== 'd' && columnKey !== 'df') {
+      const stickyLeftWidth = COLS[0].width;
+      const stickyRightWidth = COLS[COLS.length - 1].width;
+      const leftBoundary = container.scrollLeft + stickyLeftWidth;
+      const rightBoundary = container.scrollLeft + container.clientWidth - stickyRightWidth;
+
+      if (targetColumn.x < leftBoundary) {
+        container.scrollLeft = targetColumn.x - stickyLeftWidth;
+      } else if (targetColumn.x + targetColumn.width > rightBoundary) {
+        container.scrollLeft = targetColumn.x + targetColumn.width - container.clientWidth + stickyRightWidth;
       }
     }
-  };
+  }, []);
 
-  const go = (ri, c) => {
-    if (!rows[ri]) return;
-    setAct({ k: rows[ri].k, c });
-    reveal(ri, c);
-  };
+  /** Sets the active cell and ensures it is scrolled into view */
+  const selectCell = useCallback((rowIndex, columnKey) => {
+    const row = allRows[rowIndex];
+    if (!row) return;
 
-  const nav = (dx, dy) => {
-    if (!act || !index.has(act.k)) return go(0, 'd');
-    go(
-      Math.max(0, Math.min(real - 1, index.get(act.k) + dy)),
-      COLS[Math.max(0, Math.min(COLS.length - 1, CI[act.c] + dx))].k
-    );
-  };
+    setActiveCell({ k: row.key || row.k, c: columnKey });
+    revealCell(rowIndex, columnKey);
+  }, [allRows, revealCell]);
 
-  // Undo/redo: jump to changed cell
+  /** Navigates cell selection using keyboard arrow keys */
+  const navigateSelection = useCallback((deltaColumn, deltaRow) => {
+    if (!activeCell || !rowIndexMap.has(activeCell.k)) {
+      return selectCell(0, 'd');
+    }
+
+    const currentRowIndex = rowIndexMap.get(activeCell.k);
+    const currentColumnIndex = CI[activeCell.c];
+
+    const nextRowIndex = Math.max(0, Math.min(actualRowCount - 1, currentRowIndex + deltaRow));
+    const nextColumnIndex = Math.max(0, Math.min(COLS.length - 1, currentColumnIndex + deltaColumn));
+
+    selectCell(nextRowIndex, COLS[nextColumnIndex].key);
+  }, [activeCell, rowIndexMap, actualRowCount, selectCell]);
+
+  // When undo/redo occurs: auto-expand and jump directly to the restored cell
   useEffect(() => {
     if (!sheet.last) return;
-    const loc = sheet.last.loc;
-    tree.expandTo(loc);
-    const key =
-      loc.length === 3
-        ? 'l' + (loc[0] * 200 + loc[1]) + '.' + loc[2]
-        : 'i' + (loc[0] * 200 + loc[1]);
-    pending.current = {
-      k: key,
-      c: sheet.last.k
+    const location = sheet.last.location || sheet.last.loc;
+    tree.expandTo(location);
+
+    const category = sheet.categories && sheet.categories[location[0]];
+    const globalItemIndex = (category ? category.start : 0) + location[1];
+    const targetKey = location.length === 3 
+      ? `l${globalItemIndex}.${location[2]}` 
+      : `i${globalItemIndex}`;
+
+    pendingFocusRef.current = {
+      k: targetKey,
+      c: sheet.last.fieldKey || sheet.last.k
     };
-  }, [sheet.last, tree]);
+  }, [sheet.last, tree, sheet.categories]);
 
   useEffect(() => {
-    const pd = pending.current;
-    if (!pd || !index.has(pd.k)) return;
-    pending.current = null;
-    setAct(pd);
-    reveal(index.get(pd.k), pd.c);
-  }, [index]);
+    const pending = pendingFocusRef.current;
+    if (!pending || !rowIndexMap.has(pending.k)) return;
 
-  const startEdit = (seed) => {
-    const r = act && rows[index.get(act.k)];
-    if (isEditable(r, act && act.c)) {
-      setEdit({ k: act.k, c: act.c, seed });
+    pendingFocusRef.current = null;
+    setActiveCell(pending);
+    revealCell(rowIndexMap.get(pending.k), pending.c);
+  }, [rowIndexMap, revealCell]);
+
+  /** Starts inline cell editing */
+  function startCellEditing(initialChar) {
+    if (!activeCell) return;
+    const targetRow = allRows[rowIndexMap.get(activeCell.k)];
+    
+    if (isCellEditable(targetRow, activeCell.c)) {
+      setEditingCell({ k: activeCell.k, c: activeCell.c, seed: initialChar });
     }
-  };
+  }
 
-  const done = (text, move) => {
-    const e = edit;
-    if (!e) return;
-    const r = rows[index.get(e.k)];
-    setEdit(null);
+  /** Finishes inline editing: saves new value and optionally navigates to adjacent cell */
+  function finishCellEditing(newTextValue, navigationMove) {
+    const editing = editingCell;
+    if (!editing) return;
 
-    if (text !== null && r && r.o && r.o.loc) {
-      const v = parseDecimal(text);
-      if (v !== null) {
-        sheet.edit(r.o.loc, e.c, v);
+    const row = allRows[rowIndexMap.get(editing.k)];
+    setEditingCell(null);
+
+    // Save edited value to state
+    const nodeData = row ? (row.data || row.o) : null;
+    if (newTextValue !== null && nodeData && nodeData.loc) {
+      const parsedNumber = parseDecimal(newTextValue);
+      if (parsedNumber !== null) {
+        sheet.edit(nodeData.loc, editing.c, parsedNumber);
       }
     }
 
-    if (scRef.current) scRef.current.focus();
-    if (move) nav(move[0], move[1]);
-  };
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.focus();
+    }
+    
+    if (navigationMove) {
+      navigateSelection(navigationMove[0], navigationMove[1]);
+    }
+  }
 
-  const onKeyDown = (e) => {
-    if (edit || e.target.tagName === 'INPUT') return;
-    const k = e.key;
-    const m = e.ctrlKey || e.metaKey;
+  /** Global keyboard navigation listener */
+  function handleKeyDown(event) {
+    if (editingCell || event.target.tagName === 'INPUT') return;
 
-    if (m && /^[zy]$/i.test(k)) {
-      e.preventDefault();
-      k.toLowerCase() === 'y' || e.shiftKey ? sheet.redo() : sheet.undo();
+    const { key, ctrlKey, metaKey, altKey, shiftKey } = event;
+    const isCommandKey = ctrlKey || metaKey;
+
+    // Undo / Redo shortcuts (Ctrl+Z / Ctrl+Y)
+    if (isCommandKey && /^[zy]$/i.test(key)) {
+      event.preventDefault();
+      if (key.toLowerCase() === 'y' || shiftKey) {
+        sheet.redo();
+      } else {
+        sheet.undo();
+      }
       return;
     }
 
-    if (m || e.altKey) return;
+    if (isCommandKey || altKey) return;
 
-    const mv = {
+    // Directional navigation map
+    const navigationDirections = {
       ArrowDown: [0, 1],
       ArrowUp: [0, -1],
       ArrowLeft: [-1, 0],
       ArrowRight: [1, 0],
       PageDown: [0, 18],
       PageUp: [0, -18],
-      Tab: [e.shiftKey ? -1 : 1, 0]
-    }[k];
+      Tab: [shiftKey ? -1 : 1, 0]
+    };
 
-    if (mv) {
-      e.preventDefault();
-      nav(mv[0], mv[1]);
+    if (navigationDirections[key]) {
+      event.preventDefault();
+      const [deltaCol, deltaRow] = navigationDirections[key];
+      navigateSelection(deltaCol, deltaRow);
       return;
     }
 
-    if (!act || !index.has(act.k)) return;
-    const r = rows[index.get(act.k)];
+    if (!activeCell || !rowIndexMap.has(activeCell.k)) return;
+    const selectedRow = allRows[rowIndexMap.get(activeCell.k)];
 
-    if (k === 'Enter' || k === 'F2') {
-      e.preventDefault();
-      if (isEditable(r, act.c)) {
-        startEdit();
-      } else if (act.c === 'd' && r.t !== 's' && r.t !== 'l') {
-        tree.toggle(r.k);
+    if (key === 'Enter' || key === 'F2') {
+      event.preventDefault();
+      if (isCellEditable(selectedRow, activeCell.c)) {
+        startCellEditing();
+      } else if (activeCell.c === 'd' && selectedRow.type !== 'sentinel' && selectedRow.type !== 'line') {
+        tree.toggle(selectedRow.key || selectedRow.k);
       }
-    } else if (k === ' ' && act.c === 'd' && r.t !== 'l') {
-      e.preventDefault();
-      tree.toggle(r.k);
-    } else if (/^[0-9.]$/.test(k) && isEditable(r, act.c)) {
-      e.preventDefault();
-      startEdit(k);
+    } else if (key === ' ' && activeCell.c === 'd' && selectedRow.type !== 'line') {
+      event.preventDefault();
+      tree.toggle(selectedRow.key || selectedRow.k);
+    } else if (/^[0-9.]$/.test(key) && isCellEditable(selectedRow, activeCell.c)) {
+      event.preventDefault();
+      startCellEditing(key);
     }
-  };
+  }
 
-  const onClick = (e) => {
-    // If clicking inside the active editing input, let native input handle it!
-    if (e.target.tagName === 'INPUT') return;
+  /** Mouse click selection listener */
+  function handleGridClick(event) {
+    if (event.target.tagName === 'INPUT') return;
 
-    const g = e.target.closest('[data-tg]');
-    if (g) {
-      tree.toggle(g.dataset.tg);
+    // Toggle chevron click
+    const toggleTarget = event.target.closest('[data-tg]');
+    if (toggleTarget) {
+      tree.toggle(toggleTarget.dataset.tg);
       return;
     }
 
-    const c = e.target.closest('[data-r]');
-    if (c) {
-      const rowKey = c.dataset.r;
-      const colKey = c.dataset.c;
-      const r = rows[index.get(rowKey)];
-      const a = { k: rowKey, c: colKey };
-      setAct(a);
+    // Cell click
+    const cellElement = event.target.closest('[data-r]');
+    if (cellElement) {
+      const rowKey = cellElement.dataset.r;
+      const columnKey = cellElement.dataset.c;
+      const row = allRows[rowIndexMap.get(rowKey)];
+      const cellTarget = { k: rowKey, c: columnKey };
 
-      if (isEditable(r, colKey)) {
-        setEdit(a);
+      setActiveCell(cellTarget);
+
+      if (isCellEditable(row, columnKey)) {
+        setEditingCell(cellTarget);
       } else {
-        if (colKey === 'd' && r && r.t !== 'l' && r.t !== 's') {
+        if (columnKey === 'd' && row && row.type !== 'line' && row.type !== 'sentinel') {
           tree.toggle(rowKey);
         }
-        if (scRef.current) scRef.current.focus();
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.focus();
+        }
       }
     }
-  };
+  }
 
-  const onDouble = (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    const c = e.target.closest('[data-r]');
-    if (!c) return;
-    const r = rows[index.get(c.dataset.r)];
-    const a = { k: c.dataset.r, c: c.dataset.c };
-    setAct(a);
-    if (isEditable(r, a.c)) {
-      setEdit(a);
-    } else if (a.c === 'd' && r.t !== 'l') {
-      tree.toggle(r.k);
+  function handleDoubleClick(event) {
+    if (event.target.tagName === 'INPUT') return;
+    const cellElement = event.target.closest('[data-r]');
+    if (!cellElement) return;
+
+    const row = allRows[rowIndexMap.get(cellElement.dataset.r)];
+    const cellTarget = { k: cellElement.dataset.r, c: cellElement.dataset.c };
+    setActiveCell(cellTarget);
+
+    if (isCellEditable(row, cellTarget.c)) {
+      setEditingCell(cellTarget);
+    } else if (cellTarget.c === 'd' && row.type !== 'line') {
+      tree.toggle(row.key || row.k);
     }
-  };
+  }
 
-  const onScroll = (e) => {
-    const el = e.currentTarget;
-    const st = el.scrollTop;
-    setTop(st);
+  /** High-speed scroll listener with instant lazy-loading prefetch */
+  function handleScroll(event) {
+    const container = event.currentTarget;
+    const currentScrollTop = container.scrollTop;
+    setScrollTop(currentScrollTop);
 
-    // Instant lazy-loading ahead of scroll position
-    const buffer = 4000;
-    if (st + vh > rows.length * RH - buffer) {
-      const estRows = Math.ceil((st + vh + buffer) / RH);
-      tree.loadMore(estRows);
+    // Pre-emptively load more items when scrolling near the bottom (4,000px buffer)
+    const prefetchBuffer = 4000;
+    if (currentScrollTop + viewportHeight > allRows.length * ROW_HEIGHT - prefetchBuffer) {
+      const estimatedNeededRows = Math.ceil((currentScrollTop + viewportHeight + prefetchBuffer) / ROW_HEIGHT);
+      tree.loadMore(estimatedNeededRows);
     }
-  };
+  }
 
-  const a = Math.max(0, Math.floor(top / RH) - OVERSCAN);
-  const b = Math.min(rows.length, Math.ceil((top + vh) / RH) + OVERSCAN);
-  const vis = [];
+  // Calculate virtual window range (only render rows currently on screen + overscan buffer)
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - VIRTUAL_OVERSCAN);
+  const endIndex = Math.min(allRows.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + VIRTUAL_OVERSCAN);
+  const visibleRows = [];
 
-  for (let i = a; i < b; i++) {
-    const r = rows[i];
-    vis.push(
+  for (let idx = startIndex; idx < endIndex; idx++) {
+    const row = allRows[idx];
+    visibleRows.push(
       <Row
-        key={r.k}
-        row={r}
-        top={i * RH}
-        act={act && act.k === r.k ? act.c : null}
-        open={tree.open.has(r.k)}
-        loading={r.t === 's' && tree.loading}
+        key={row.key || row.k}
+        row={row}
+        top={idx * ROW_HEIGHT}
+        act={activeCell && activeCell.k === (row.key || row.k) ? activeCell.c : null}
+        open={tree.open.has(row.key || row.k)}
+        loading={row.type === 'sentinel' && tree.loading}
       />
     );
   }
 
-  const er = edit && rows[index.get(edit.k)];
-  const ar = act && rows[index.get(act.k)];
-  const label =
-    ar && ar.t !== 's'
-      ? (ar.t === 'l' ? ar.o.n : ar.o.name) + ' › ' + COLS[CI[act.c]].l
-      : 'No cell selected';
+  // Selected cell label for bottom status bar
+  const selectedRow = activeCell && allRows[rowIndexMap.get(activeCell.k)];
+  const selectedRowData = selectedRow ? (selectedRow.data || selectedRow.o) : null;
+  const statusLabel = selectedRowData
+    ? `${selectedRowData.name || selectedRowData.n} › ${COLS[CI[activeCell.c]].label}`
+    : 'No cell selected';
+
+  const editingRow = editingCell && allRows[rowIndexMap.get(editingCell.k)];
 
   return (
     <>
       <div
         id="sc"
-        ref={scRef}
+        ref={scrollContainerRef}
         tabIndex={0}
-        aria-label="Cost sheet grid"
+        aria-label="Tender cost sheet spreadsheet"
         style={GRID_VARS}
-        onScroll={onScroll}
-        onKeyDown={onKeyDown}
-        onClick={onClick}
-        onDoubleClick={onDouble}
+        onScroll={handleScroll}
+        onKeyDown={handleKeyDown}
+        onClick={handleGridClick}
+        onDoubleClick={handleDoubleClick}
       >
         <div id="in">
           <Header />
-          <div id="bd" style={{ height: rows.length * RH }}>
-            {vis}
-            {er ? (
+          <div id="bd" style={{ height: allRows.length * ROW_HEIGHT }}>
+            {visibleRows}
+
+            {/* Active Inline Cell Editor */}
+            {editingRow ? (
               <CellEditor
-                key={edit.k + edit.c}
-                top={index.get(edit.k) * RH}
-                c={edit.c}
-                seed={edit.seed}
-                line={er.o}
-                onDone={done}
+                key={editingCell.k + editingCell.c}
+                top={rowIndexMap.get(editingCell.k) * ROW_HEIGHT}
+                c={editingCell.c}
+                seed={editingCell.seed}
+                line={editingRow.data || editingRow.o}
+                onDone={finishCellEditing}
               />
             ) : null}
           </div>
         </div>
       </div>
-      <div className="st">
+
+      {/* Enterprise Single-Line Status Bar (32px) */}
+      <footer className="st">
         <span className="st-cnt">
-          {Math.min(tree.loaded, NT).toLocaleString('en-US')} of {NT.toLocaleString('en-US')} items loaded
+          {`${Math.min(tree.loaded, NT).toLocaleString('en-US')} of ${NT.toLocaleString('en-US')} items loaded`}
         </span>
-        <span className="st-path">{label}</span>
+        <span className="st-path">{statusLabel}</span>
         <span className="sp" />
         <span className="st-hints">
-          <kbd>↑↓←→</kbd> move · <kbd>Enter</kbd> edit · <kbd>Esc</kbd> cancel · <kbd>Ctrl+Z/Y</kbd>
+          <kbd>↑↓←→</kbd> move · <kbd>Enter</kbd> edit · <kbd>Esc</kbd> cancel · <kbd>Ctrl+Z/Y</kbd> undo/redo
         </span>
-      </div>
+      </footer>
     </>
   );
 }
